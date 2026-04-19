@@ -26,9 +26,16 @@ const userSchema = new mongoose.Schema({
         ref:"Store",
         default: null 
         },
-        isActive:{
-            type:Boolean,default:true
-        },
+
+        isVerified:
+        {   type: Boolean, 
+            default: false
+         },
+
+    otpHash: String,
+    otpExpiry: Date
+
+    
 },{ timestamps :true});
 
 const User =mongoose.model("User",userSchema);
