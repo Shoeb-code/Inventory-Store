@@ -5,7 +5,6 @@ import { config } from "../config/env.js";
 const client = SibApiV3Sdk.ApiClient.instance;
 const apiKey = client.authentications["api-key"];
 
-console.log(config.BREVO_API_KEY)
 apiKey.apiKey = config.BREVO_API_KEY; // ✅ FIXED
 
 const tranEmailApi = new SibApiV3Sdk.TransactionalEmailsApi();

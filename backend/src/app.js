@@ -12,7 +12,7 @@ import { errorHandler } from './shared/middleware/error.middleware.js';
 const app=express()
 app.use(
   cors({
-    origin: "*", // allow all (for dev)
+    origin: "http://localhost:5173", // frontend URL
     credentials: true
   })
 );
