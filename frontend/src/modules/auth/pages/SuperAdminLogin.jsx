@@ -1,63 +1,40 @@
-import { useState, useEffect } from "react";
-import { useNavigate, useLocation } from "react-router-dom";
-import { resetPassword } from "../authAPI";
+import { useState } from "react";
+import { useNavigate } from "react-router-dom";
+import { loginUser } from "../authAPI";
 import toast from "react-hot-toast";
 import { motion } from "framer-motion";
 
-const ResetPassword = () => {
+export default function SuperAdminLogin() {
   const navigate = useNavigate();
-  const location = useLocation();
 
-  const [email, setEmail] = useState("");
   const [form, setForm] = useState({
-    newPassword: "",
-    confirmPassword: ""
+    email: "",
+    password: ""
   });
 
   const [loading, setLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
 
-  useEffect(() => {
-    const storedEmail = localStorage.getItem("verifyEmail");
-
-    if (location.state?.email) {
-      setEmail(location.state.email);
-    } else if (storedEmail) {
-      setEmail(storedEmail);
-    } else {
-      toast.error("Session expired. Please try again.");
-      navigate("/forgot-password");
-    }
-  }, [location, navigate]);
-
   const handleChange = (e) =>
     setForm({ ...form, [e.target.name]: e.target.value });
 
-  const isValid =
-    form.newPassword &&
-    form.confirmPassword &&
-    form.newPassword.length >= 6 &&
-    form.newPassword === form.confirmPassword;
+  const isValid = form.email && form.password;
 
   const handleSubmit = async (e) => {
     e.preventDefault();
 
     if (!isValid) {
-      return toast.error("Please fix the errors");
+      return toast.error("Please fill all fields");
     }
 
     try {
       setLoading(true);
 
-      await resetPassword({
-        email,
-        newPassword: form.newPassword
-      });
+      const res = await loginUser(form);
+      localStorage.setItem("token", res.data.accessToken);
 
-      toast.success("Password reset successful 🎉");
-
-      localStorage.removeItem("verifyEmail");
-      navigate("/login");
+      toast.success("Welcome back 🚀");
+      navigate("/admin");
 
     } catch (err) {
       toast.error(
@@ -86,7 +63,7 @@ const ResetPassword = () => {
           transition={{ delay: 0.1 }}
           className="text-3xl font-semibold text-white mb-2"
         >
-          Set New Password
+          Welcome Back
         </motion.h2>
 
         <motion.p
@@ -95,28 +72,52 @@ const ResetPassword = () => {
           transition={{ delay: 0.2 }}
           className="text-gray-400 text-sm"
         >
-          Create a secure password for your account
+          Login to manage your inventory system
         </motion.p>
       </div>
 
       <form onSubmit={handleSubmit} className="space-y-6">
 
-        {/* New Password */}
+        {/* Email */}
         <motion.div
           initial={{ opacity: 0, y: 10 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.3 }}
         >
           <label className="text-sm text-gray-400 mb-1 block">
-            New Password
+            Email Address
+          </label>
+          <input
+            name="email"
+            type="email"
+            placeholder="john@example.com"
+            value={form.email}
+            onChange={handleChange}
+            className="w-full px-4 py-3 rounded-lg 
+            bg-[#020617] border border-white/10 text-white 
+            placeholder-gray-500
+            focus:outline-none focus:ring-2 focus:ring-blue-500 
+            focus:scale-[1.02]
+            transition-all duration-200"
+          />
+        </motion.div>
+
+        {/* Password */}
+        <motion.div
+          initial={{ opacity: 0, y: 10 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.4 }}
+        >
+          <label className="text-sm text-gray-400 mb-1 block">
+            Password
           </label>
 
           <div className="relative">
             <input
+              name="password"
               type={showPassword ? "text" : "password"}
-              name="newPassword"
-              placeholder="Minimum 6 characters"
-              value={form.newPassword}
+              placeholder="Enter your password"
+              value={form.password}
               onChange={handleChange}
               className="w-full px-4 py-3 pr-12 rounded-lg 
               bg-[#020617] border border-white/10 text-white 
@@ -134,45 +135,30 @@ const ResetPassword = () => {
               {showPassword ? "Hide" : "Show"}
             </span>
           </div>
-
-          {/* Password Hint */}
-          {form.newPassword && form.newPassword.length < 6 && (
-            <p className="text-red-400 text-xs mt-1">
-              Must be at least 6 characters
-            </p>
-          )}
         </motion.div>
 
-        {/* Confirm Password */}
+        {/* Links */}
         <motion.div
-          initial={{ opacity: 0, y: 10 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.4 }}
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ delay: 0.5 }}
+          className="flex justify-between text-sm"
         >
-          <label className="text-sm text-gray-400 mb-1 block">
-            Confirm Password
-          </label>
+          <button
+            type="button"
+            onClick={() => navigate("/forgot-password")}
+            className="text-gray-400 hover:text-white transition"
+          >
+            Forgot password?
+          </button>
 
-          <input
-            type={showPassword ? "text" : "password"}
-            name="confirmPassword"
-            placeholder="Re-enter password"
-            value={form.confirmPassword}
-            onChange={handleChange}
-            className="w-full px-4 py-3 rounded-lg 
-            bg-[#020617] border border-white/10 text-white 
-            placeholder-gray-500
-            focus:outline-none focus:ring-2 focus:ring-blue-500 
-            focus:scale-[1.02]
-            transition-all duration-200"
-          />
-
-          {form.confirmPassword &&
-            form.newPassword !== form.confirmPassword && (
-              <p className="text-red-400 text-xs mt-1">
-                Passwords do not match
-              </p>
-            )}
+          <button
+            type="button"
+            onClick={() => navigate("/register")}
+            className="text-blue-400 hover:underline"
+          >
+            Create account
+          </button>
         </motion.div>
 
         {/* Button */}
@@ -185,18 +171,15 @@ const ResetPassword = () => {
           hover:from-blue-600 hover:to-blue-700 
           hover:shadow-[0_0_20px_rgba(59,130,246,0.5)]
           transition-all duration-200 
-          text-white disabled:opacity-50 
-          flex justify-center items-center gap-2"
+          text-white disabled:opacity-50 flex justify-center items-center gap-2"
         >
           {loading && (
             <span className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></span>
           )}
-          {loading ? "Resetting..." : "Reset Password"}
+          {loading ? "Logging in..." : "Login"}
         </motion.button>
 
       </form>
     </motion.div>
   );
-};
-
-export default ResetPassword;
+}

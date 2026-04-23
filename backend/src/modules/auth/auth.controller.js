@@ -13,6 +13,7 @@ export const register = async(req,res,next)=>{
 
 export const verifyOTP = async (req, res, next) => {
     try {
+       console.log("otp:->",req.body);
       const data = await authService.verifyOtp(req.body);
       res.json(data);
     } catch (e) {
@@ -31,7 +32,9 @@ export const verifyOTP = async (req, res, next) => {
 
 export const forgotPassword = async (req, res, next) => {
     try {
-      const data = await authService.forgotPassword(req.body.email);
+       const {email}= req.body;
+      const data = await authService.forgotPassword(email);
+       console.log("your Data:",data)
       res.json(data);
     } catch (e) {
       next(e);
@@ -49,15 +52,16 @@ export const resetPassword = async (req, res, next) => {
 
 export const login = async (req,res,next)=>{
     try {
+          console.log(req.body)
          const {accessToken,refreshToken,user}= await authService.login({
             ...req.body,
-            ip:req.ip
+              ip:req.ip
          })
          // store refresh token in httpOnly cookie 
          res.cookie('refreshToken',refreshToken,{
             httpOnly:true,
             secure:false,
-            sameSite:'strict'
+            sameSite:'lax'
          })
          res.json({accessToken,user})
     } catch (e) {

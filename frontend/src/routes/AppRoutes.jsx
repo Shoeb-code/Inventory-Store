@@ -1,27 +1,32 @@
-import { BrowserRouter, Routes, Route } from "react-router-dom";
+import { Routes, Route, useLocation } from "react-router-dom";
+import { AnimatePresence } from "framer-motion";
 
-import AuthLayout from "../modules/auth/components/AuthLayout";
+import AuthLayout from "../layouts/AuthLayout";
 
-// Pages
-import Register from "../modules/auth/pages/Register";
+import SuperAdminLogin from "../modules/auth/pages/SuperAdminLogin";
+import SuperAdminRegister from "../modules/auth/pages/SuperAdminRegister";
 import VerifyOtp from "../modules/auth/pages/VerifyOtp";
-import Login from "../modules/auth/pages/Login";
+import ForgotPassword from "../modules/auth/pages/ForgotPassword";
+import ResetPassword from "../modules/auth/pages/ResetPassword";
 
 export default function AppRoutes() {
+  const location = useLocation();
+
   return (
-    <BrowserRouter>
-      <Routes>
+    <AnimatePresence mode="wait">
+      <Routes location={location} key={location.pathname}>
 
-        {/* Auth Layout */}
-        <Route path="/" element={<AuthLayout />}>
+        {/* AUTH LAYOUT */}
+        <Route element={<AuthLayout />}>
 
-          <Route path="register" element={<Register />} />
-          <Route path="verify" element={<VerifyOtp />} />
-          <Route path="login" element={<Login />} />
-
+          <Route path="/login" element={<SuperAdminLogin />} />
+          <Route path="/register" element={<SuperAdminRegister />} />
+          <Route path="/verify-otp" element={<VerifyOtp />} />
+          <Route path ="/forgot-password" element={<ForgotPassword/>} />
+          <Route path ="/reset-password" element={<ResetPassword/>} />
         </Route>
 
       </Routes>
-    </BrowserRouter>
+    </AnimatePresence>
   );
 }

@@ -1,42 +1,37 @@
+import mongoose from "mongoose";
 
-import mongoose, { mongo } from "mongoose";
-
-const userSchema = new mongoose.Schema({
-    name:{
-        type:String,
-        required:true,
+const userSchema = new mongoose.Schema(
+  {
+    name: {
+      type: String,
+      required: true
     },
-    email:{
-        type:String,
-        unique:true,
-        required:true,
-        lowercase:true
+
+    email: {
+      type: String,
+      unique: true,
+      required: true,
+      lowercase: true
     },
-    password:{
-        type:String,
-        required:true,
+
+    password: {
+      type: String,
+      required: true
     },
-    role:{
-        type:String,
-        enum:["SUPER_ADMIN", "STORE_ADMIN"],
-        default:"STORE_ADMIN"
+
+    isVerified : {
+      type: Boolean,
+      default:false
     },
-    storeID:{
-        type:mongoose.Schema.Types.ObjectId,
-        ref:"Store",
-        default: null 
-        },
 
-        isVerified:
-        {   type: Boolean, 
-            default: false
-         },
+    role: {
+      type: String,
+      enum: ["SUPER_ADMIN"],
+      default: "SUPER_ADMIN"
+    }
+  },
+  { timestamps: true }
+);
 
-    otpHash: String,
-    otpExpiry: Date
-
-    
-},{ timestamps :true});
-
-const User =mongoose.model("User",userSchema);
+const User = mongoose.model("User", userSchema);
 export default User;
