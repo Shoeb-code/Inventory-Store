@@ -17,7 +17,7 @@ export default function VerifyOtp() {
 
   const [otp, setOtp] = useState(new Array(6).fill(""));
   const [loading, setLoading] = useState(false);
-  const [timer, setTimer] = useState(30);
+  const [timer, setTimer] = useState(60);
 
   const inputsRef = useRef([]);
 
@@ -71,7 +71,7 @@ export default function VerifyOtp() {
     try {
       await forgotPassword({ email });
       toast.success("OTP resent");
-      setTimer(30);
+      setTimer(60);
     } catch {
       toast.error("Failed to resend OTP");
     }
@@ -84,12 +84,9 @@ export default function VerifyOtp() {
 
     try {
       setLoading(true);
-
-      await verifyOtp({ email, otp: finalOtp });
-
+      await verifyOtp({ email, otp:finalOtp });
       localStorage.removeItem("verifyEmail");
       toast.success("OTP verified 🎉");
-
       setTimeout(() => {
         if (type === "forgot") {
           navigate("/reset-password", { state: { email } });

@@ -1,38 +1,35 @@
 import Store from "../store/store.model.js";
-import bcrypt from "bcrypt";
-import { signAccessToken } from "../../shared/utils/generateToken.js";
 
-export const loginStore = async ({ storeCode, password }) => {
-    
-  const store = await Store.findOne({ storeCode });
+export const loginStore = async (storeId, password) => {
+
+  const store = await Store.findOne({ storeId }).select("+password");
+
   if (!store) throw new Error("Store not found");
 
-  if (!store.isActive) {
-    throw new Error("Store is disabled");
+  if (store.isLocked) {
+    throw new Error("Account locked. Try later");
   }
 
-  const isMatch = await bcrypt.compare(password, store.password);
-  if (!isMatch) throw new Error("Invalid credentials");
+  const isMatch = await store.comparePassword(password);
 
-  // ✅ Mark online
-  store.isOnline = true;
+  if (!isMatch) {
+    store.loginAttempts += 1;
+
+    if (store.loginAttempts >= 5) {
+      store.lockUntil = Date.now() + 15 * 60 * 1000; // 15 min
+    }
+
+    await store.save();
+    throw new Error("Invalid credentials");
+  }
+
+  // ✅ reset attempts
+  store.loginAttempts = 0;
+  store.lockUntil = undefined;
   store.lastLogin = new Date();
+  store.isOnline = true;
+
   await store.save();
 
-  const payload = {
-    id: store._id,
-    role: "STORE_ADMIN",
-    storeId: store._id
-  };
-
-  const accessToken = signAccessToken(payload);
-
-  return {
-    accessToken,
-    store: {
-      id: store._id,
-      name: store.name,
-      storeCode: store.storeCode
-    }
-  };
+  return store;
 };

@@ -1,9 +1,33 @@
+// modules/inventory/inventory.routes.js
+
 import express from "express";
-import { addBulk } from "./inventory.controller.js";
-import { protect } from "../../shared/middleware/auth.middleware.js";
+import {
+  createInventory,
+  getInventory,
+  addSerialNumbers,
+  updateInventory,
+  deleteInventory,
+  getSummary,
+  getTrend,
+  getRecentSales,
+  
+} from "./inventory.controller.js";
+
+import {protect }from "../../shared/middleware/auth.middleware.js";
 
 const router = express.Router();
 
-router.post("/bulk", protect, addBulk);
+router.post("/create", protect, createInventory);
+
+router.get("/summary", protect, getSummary);
+router.get("/trend", protect, getTrend);
+router.get("/recent-sales", protect, getRecentSales);
+
+router.get("/:id", protect, getInventory);   // 👈 LAST
+
+router.patch("/:id/serials", protect, addSerialNumbers);
+router.put("/:id", protect, updateInventory);
+router.delete("/:id", protect, deleteInventory);
+
 
 export default router;

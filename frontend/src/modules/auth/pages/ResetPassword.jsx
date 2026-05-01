@@ -57,7 +57,7 @@ const ResetPassword = () => {
       toast.success("Password reset successful 🎉");
 
       localStorage.removeItem("verifyEmail");
-      navigate("/login");
+      navigate("/admin/login");
 
     } catch (err) {
       toast.error(

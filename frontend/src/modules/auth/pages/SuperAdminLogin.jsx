@@ -3,10 +3,11 @@ import { useNavigate } from "react-router-dom";
 import { loginUser } from "../authAPI";
 import toast from "react-hot-toast";
 import { motion } from "framer-motion";
+import { useAuth } from "../../../context/AuthContext";
 
 export default function SuperAdminLogin() {
   const navigate = useNavigate();
-
+  const { login } = useAuth();
   const [form, setForm] = useState({
     email: "",
     password: ""
@@ -29,13 +30,14 @@ export default function SuperAdminLogin() {
 
     try {
       setLoading(true);
-
       const res = await loginUser(form);
       localStorage.setItem("token", res.data.accessToken);
-
+      login({
+        accessToken: res.data.accessToken,
+        user:res.data.user, // must contain role
+      });
       toast.success("Welcome back 🚀");
-      navigate("/admin");
-
+      navigate("/admin/dashboard");
     } catch (err) {
       toast.error(
         err.response?.data?.message || "Something went wrong"
@@ -154,7 +156,7 @@ export default function SuperAdminLogin() {
 
           <button
             type="button"
-            onClick={() => navigate("/register")}
+            onClick={() => navigate("/admin/register")}
             className="text-blue-400 hover:underline"
           >
             Create account

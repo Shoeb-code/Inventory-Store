@@ -1,21 +1,36 @@
-import * as storeService from "./store.service.js";
+import Store from "./store.model.js";
+import { createStore } from "./store.service.js";
 
-// ➕ Add store
-export const addStore = async (req, res, next) => {
+export const createStoreController = async (req, res) => {
   try {
-    const store = await storeService.createStore(req.body);
-    res.status(201).json(store);
-  } catch (e) {
-    next(e);
+    console.log(" Store Data ->",req.body);
+    const store = await createStore(req.body,req.user.id);
+  
+    res.status(201).json({
+      success: true,
+      message: "Store created successfully",
+      data: {
+        id: store._id,
+        name: store.name,
+        storeId: store.storeId,
+      },
+    });
+
+  } catch (err) {
+    console.log(err);
+    res.status(400).json({
+      success: false,
+      
+      message: err.message,
+    });
   }
 };
 
-// 📥 Get all stores
-export const getAllStores = async (req, res, next) => {
-  try {
-    const stores = await storeService.getStores();
-    res.json(stores);
-  } catch (e) {
-    next(e);
-  }
+export const getAllStores = async (req, res) => {
+  const stores = await Store.find().select("-password");
+
+  res.status(200).json({
+    success: true,
+    data: stores,
+  });
 };

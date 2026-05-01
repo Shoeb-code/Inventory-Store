@@ -2,31 +2,77 @@ import mongoose from "mongoose";
 
 const inventorySchema = new mongoose.Schema(
   {
-    productName: String,
-    brand: String,
-    model: String,
-
-    price: Number,
-    costPrice: Number,
-
-    serialNumber: {
+    // 🔹 PRODUCT INFO
+    brand: {
       type: String,
-      unique: true
+      required: true,
+      trim: true,
     },
 
+    model: {
+      type: String,
+      required: true,
+      trim: true,
+    },
+
+    category: {
+      type: String,
+      enum: [
+        "Gaming","Office","Student","Premium","Business",
+        "Ultrabook","Workstation","2-in-1 / Convertible",
+        "Creator / Design","Thin & Light","Budget","Enterprise",
+      ],
+      required: true,
+    },
+
+    // 🔹 SPECIFICATIONS
+    processor: { type: String, required: true },
+    ram: { 
+      type: String,
+       required: true 
+      },
+    storage: { 
+      type: String, 
+      required: true
+     },
+      graphics: String,
+
+    // 🔹 PRICING (REFERENCE ONLY)
+    price: {
+      type: Number,
+      required: true,
+      min: 0,
+    },
+
+    // 🔥 STOCK
+    stock: {
+      type: Number,
+      required: true,
+      min: 1,
+    },
+
+    // 🔹 STORE
     storeId: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "Store",
-      required: true
+      required: true,
     },
 
-    status: {
-      type: String,
-      enum: ["IN_STOCK", "SOLD", "TRANSFERRED"],
-      default: "IN_STOCK"
-    }
+    // 🔹 ANALYTICS
+    soldCount: {
+      type: Number,
+      default: 0,
+    },
+
+    // 🔹 MEDIA
+    image: String,
   },
   { timestamps: true }
 );
+
+
+// 🔥 INDEXES
+inventorySchema.index({ storeId: 1 });
+inventorySchema.index({ brand: 1, model: 1 });
 
 export default mongoose.model("Inventory", inventorySchema);

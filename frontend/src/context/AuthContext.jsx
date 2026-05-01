@@ -1,33 +1,34 @@
 import { createContext, useContext, useState, useEffect } from "react";
 
-// create context
 const AuthContext = createContext();
 
-// provider
 export const AuthProvider = ({ children }) => {
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
 
-  // check token on app load
+  // 🔥 Restore user on refresh
   useEffect(() => {
     const token = localStorage.getItem("accessToken");
+    const storedUser = localStorage.getItem("user");
 
-    if (token) {
-      setUser({}); // later replace with API call
+    if (token && storedUser) {
+      setUser(JSON.parse(storedUser));
     }
 
     setLoading(false);
   }, []);
 
-  // login
-  const login = (data) => {
-    localStorage.setItem("accessToken", data.accessToken);
-    setUser(data.user);
+  // 🔐 Login
+  const login = ({ accessToken, user }) => {
+    localStorage.setItem("accessToken", accessToken);
+    localStorage.setItem("user", JSON.stringify(user));
+    setUser(user);
   };
 
-  // logout
+  // 🚪 Logout
   const logout = () => {
     localStorage.removeItem("accessToken");
+    localStorage.removeItem("user");
     setUser(null);
   };
 
@@ -38,7 +39,5 @@ export const AuthProvider = ({ children }) => {
   );
 };
 
-// custom hook (clean usage 🔥)
-export const useAuth = () => {
-  return useContext(AuthContext);
-};
+// 🔥 Hook
+export const useAuth = () => useContext(AuthContext);

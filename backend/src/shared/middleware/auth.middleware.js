@@ -2,17 +2,30 @@ import jwt from "jsonwebtoken";
 import { config } from "../config/env.js";
 
 export const protect = (req, res, next) => {
-  const token = req.headers.authorization?.split(" ")[1];
-
-  if (!token) {
-    return res.status(401).json({ msg: "No token" });
-  }
-
   try {
+    const authHeader = req.headers.authorization;
+
+    // 🔒 Check header
+    if (!authHeader || !authHeader.startsWith("Bearer ")) {
+      return res.status(401).json({ msg: "No token provided" });
+    }
+
+    const token = authHeader.split(" ")[1];
+  
+    
+    // 🔒 Verify token
     const decoded = jwt.verify(token, config.JWT_ACCESS_SECRET);
+
+    // ✅ Attach user
     req.user = decoded;
-    next();
-  } catch {
-    res.status(401).json({ msg: "Invalid token"});
+    
+   
+    // ✅ Move to next middleware
+    return next();
+
+  } catch (err) {
+    return res.status(401).json({
+      msg: "Invalid token",
+    });
   }
 };

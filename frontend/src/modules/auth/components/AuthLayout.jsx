@@ -1,9 +1,10 @@
 import { Outlet } from "react-router-dom";
+import AuthNavbar from "../../../components/common/AuthNavbar";
 
 export default function AuthLayout() {
   return (
     <div className="min-h-screen flex bg-[#0B1120] text-white">
-
+              <AuthNavbar />
       {/* LEFT PANEL */}
       <div className="hidden md:flex w-1/2 relative overflow-hidden">
 

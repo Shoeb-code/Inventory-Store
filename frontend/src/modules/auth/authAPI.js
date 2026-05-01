@@ -19,3 +19,10 @@ export const forgotPassword = (data) =>
 // 🔑 Reset Password (with token or OTP)
 export const resetPassword = (data) =>
   API.post("/auth/reset-password", data);
+
+
+// storeadmin
+export const loginStoreAdmin = async (data) => {
+  const res = await API.post("/auth/store-admin/login",data);
+  return res.data;
+};

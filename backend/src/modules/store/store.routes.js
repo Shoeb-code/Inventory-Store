@@ -1,12 +1,14 @@
 import express from "express";
-import { addStore, getAllStores } from "./store.controller.js";
-import { authorize } from "../../shared/middleware/role.middleware.js";
+import { createStoreController, getAllStores } from "./store.controller.js";
 import { protect } from "../../shared/middleware/auth.middleware.js";
+import  { authorize }  from "../../shared/middleware/role.middleware.js";
 
 const router = express.Router();
 
-// SUPER ADMIN ONLY
-router.post("/", protect, authorize("SUPER_ADMIN"), addStore);
+// 🔥 CREATE STORE (ONLY SUPER ADMIN)
+router.post("/create", protect,authorize("SUPER_ADMIN"),createStoreController);
+
+// all stores
 router.get("/", protect, authorize("SUPER_ADMIN"), getAllStores);
 
 export default router;

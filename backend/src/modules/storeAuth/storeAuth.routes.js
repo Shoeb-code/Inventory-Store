@@ -1,13 +1,9 @@
 import express from "express";
-import { login, logout } from "./storeAuth.controller.js";
-import { protect } from "../../shared/middleware/auth.middleware.js";
+import { storeLogin } from "./storeAuth.controller.js";
 
 const router = express.Router();
 
-// 🔐 Store Login
-router.post("/login", login);
-
-// 🚪 Store Logout
-router.post("/logout", protect, logout);
+// 🔐 Store Admin Login
+router.post("/login", storeLogin);
 
 export default router;

@@ -37,8 +37,6 @@ export default function SuperAdminRegister() {
 
       await registerUser({ ...form, role: "SUPER_ADMIN" });
 
-      toast.success("Account created 🚀");
-
       localStorage.setItem("verifyEmail", form.email);
 
       navigate("/verify-otp", {
@@ -201,7 +199,7 @@ export default function SuperAdminRegister() {
         >
           Already have an account?{" "}
           <span
-            onClick={() => navigate("/login")}
+            onClick={() => navigate("/admin/login")}
             className="text-blue-400 cursor-pointer hover:underline"
           >
             Login

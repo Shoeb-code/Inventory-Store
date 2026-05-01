@@ -137,7 +137,7 @@ const ForgotPassword = () => {
         >
           Remember your password?{" "}
           <span
-            onClick={() => navigate("/login")}
+            onClick={() => navigate("/admin/login")}
             className="text-blue-400 cursor-pointer hover:underline"
           >
             Back to Login

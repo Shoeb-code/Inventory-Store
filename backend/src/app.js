@@ -9,6 +9,7 @@ import inventoryRoutes from "./modules/inventory/inventory.routes.js";
 import transferRoutes from "./modules/transfer/transfer.routes.js";
 import storeRoutes from "./modules/store/store.routes.js";
 import storeAuthRoutes from "./modules/storeAuth/storeAuth.routes.js";
+import inventoryUnitRoutes from './modules/inventoryUnit/inventoryUnit.routes.js'
 
 // Middleware
 import { errorHandler } from "./shared/middleware/error.middleware.js";
@@ -37,10 +38,12 @@ app.use("/api/auth", authRoutes);
 app.use("/api/dashboard", dashboardRoutes);
 app.use("/api/inventory", inventoryRoutes);
 app.use("/api/transfer", transferRoutes);
-app.use("/api/stores", storeRoutes);
+app.use("/api/store", storeRoutes);
 
 
-app.use("/api/store-auth", storeAuthRoutes);
+app.use("/api/inventory-unit", inventoryUnitRoutes);
+
+app.use("/api/auth/store-admin", storeAuthRoutes);
 // 404
 app.use((req, res) => {
   res.status(404).json({ message: "Route not found" });

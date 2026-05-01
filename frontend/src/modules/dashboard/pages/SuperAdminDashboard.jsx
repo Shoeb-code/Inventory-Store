@@ -86,7 +86,6 @@ export default function SuperAdminDashboard() {
             </div>
 
           </div>
-
         </div>
 
         {/* RECENT TRANSFERS */}

@@ -1,11 +1,12 @@
 import { Outlet } from "react-router-dom";
 import { motion } from "framer-motion";
 import PageWrapper from "../components/animations/PageWrapper";
+import AuthNavbar from "../components/common/AuthNavbar";
 
 export default function AuthLayout() {
   return (
     <div className="min-h-screen flex bg-[#1a1a19] relative overflow-hidden">
-
+             <AuthNavbar />
       {/* 🌌 Animated Background Glow */}
       <motion.div
         animate={{ x: [0, 40, 0], y: [0, 20, 0] }}
