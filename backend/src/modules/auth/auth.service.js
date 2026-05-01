@@ -92,6 +92,7 @@ export const verifyOtp = async ({ email, otp }) => {
   }
 
   const isMatch = await compareOTP(otp, record.otpHash);
+    console.log( "Otp both->",otp,record.otpHash);
   if (!isMatch) throw new Error("Invalid OTP");
 
   // 🔥 CASE 1: REGISTER FLOW
