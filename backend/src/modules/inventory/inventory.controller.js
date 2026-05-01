@@ -121,7 +121,7 @@ export const deleteInventory = async (req, res, next) => {
 export const getSummary = async (req, res) => {
   try {
     const soldUnits = await InventoryUnit.find({ status: "SOLD" });
-    console.log("Sold Units ->",soldUnits)
+  
     const revenue = soldUnits.reduce((acc, u) => acc + (u.sellingPrice || 0), 0);
     const profit = soldUnits.reduce((acc, u) => acc + (u.profit || 0), 0);
 
@@ -135,6 +135,8 @@ export const getSummary = async (req, res) => {
     res.status(500).json({ message: err.message });
   }
 };
+
+
 
 
 export const getTrend = async (req, res) => {
@@ -188,6 +190,57 @@ export const getRecentSales = async (req, res) => {
 
     res.json(formatted);
   } catch (err) {
+    res.status(500).json({ message: err.message });
+  }
+};
+
+
+// Sales record
+export const getSales = async (req, res) => {
+  try {
+    const sales = await InventoryUnit.find({ status: "SOLD" })
+      .populate(
+        "inventoryId",
+        "brand model category processor ram storage price"
+      )
+      .sort({ updatedAt: -1 });
+
+    const result = sales.map((s) => ({
+      id: s._id,
+
+      // 🔹 PRODUCT DETAILS
+      product: {
+        id: s.inventoryId?._id,
+        brand: s.inventoryId?.brand || "-",
+        model: s.inventoryId?.model || "-",
+        category: s.inventoryId?.category || "-",
+        processor: s.inventoryId?.processor || "-",
+        ram: s.inventoryId?.ram || "-",
+        storage: s.inventoryId?.storage || "-",
+        basePrice: s.inventoryId?.price || 0,
+      },
+
+      // 🔹 UNIT DETAILS
+      unit: {
+        serialNumber: s.serialNumber || "-",
+        imei: s.imei || "-",
+      },
+
+      // 🔹 SALE DETAILS
+      sale: {
+        sellingPrice: s.sellingPrice || 0,
+        costPrice: s.costPrice || 0,
+        profit: s.profit ?? (s.sellingPrice || 0) - (s.costPrice || 0), // 🔥 safe calc
+        date: s.updatedAt,
+      }
+    }));
+
+    console.log("result:", result[0]); // 👈 log only first (clean debug)
+
+    res.json(result);
+
+  } catch (err) {
+    console.error("SALES ERROR:", err);
     res.status(500).json({ message: err.message });
   }
 };
