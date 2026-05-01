@@ -1,17 +1,22 @@
 import Store from "./store.model.js";
-import bcrypt from "bcrypt";
 
-export const createStore = async (data, user) => {
-  if (user.role !== "SUPER_ADMIN") {
-    throw new Error("Only super admin can create store");
+export const createStore = async (data, userId) => {
+
+  const { name, storeId, password } = data;
+
+  // 🔍 Check duplicate storeCode
+  const existing = await Store.findOne({ storeId });
+
+  if (existing) {
+    throw new Error("Store ID already exists");
   }
 
-  const hashedPassword = await bcrypt.hash(data.password, 10);
-
-  return await Store.create({
-    name: data.name,
-    storeCode: data.storeCode, // 👈 manual or generated
-    password: hashedPassword,
-    createdBy: user.id
+  const store = await Store.create({
+    name,
+    storeId,
+    password,
+    createdBy:userId,
   });
+
+  return store;
 };
