@@ -10,6 +10,7 @@ import {
   getSummary,
   getTrend,
   getRecentSales,
+  getSales,
   
 } from "./inventory.controller.js";
 
@@ -21,6 +22,7 @@ router.post("/create", protect, createInventory);
 
 router.get("/summary", protect, getSummary);
 router.get("/trend", protect, getTrend);
+router.get("/sales", protect, getSales); 
 router.get("/recent-sales", protect, getRecentSales);
 
 router.get("/:id", protect, getInventory);   // 👈 LAST
