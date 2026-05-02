@@ -37,6 +37,8 @@ export default function StoreDashboard() {
     }
   };
 
+  console.log("Sales data->",sales)
+
   useEffect(() => {
     fetchDashboard();
   }, [range]);
@@ -124,6 +126,8 @@ export default function StoreDashboard() {
             {sales.map((s, i) => (
               <div key={i} className="flex justify-between">
                 <span>{s.productName || "Product"}</span>
+                <span>{s.brand || "Product"}</span>
+                <span>{s.model || "Product"}</span>
                 <span className="text-green-400">
                   ₹{s.amount || 0}
                 </span>

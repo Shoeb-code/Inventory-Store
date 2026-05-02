@@ -28,7 +28,7 @@ app.use(express.json());
 app.use(cookieParser());
 
 // Root
-app.get("/", (req, res) => {
+app.get("/",(req, res) => {
   console.log("ROOT HIT");
   res.send("API Running 🚀");
 });
@@ -42,7 +42,6 @@ app.use("/api/store", storeRoutes);
 
 
 app.use("/api/inventory-unit", inventoryUnitRoutes);
-
 app.use("/api/auth/store-admin", storeAuthRoutes);
 // 404
 app.use((req, res) => {

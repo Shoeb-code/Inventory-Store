@@ -25,7 +25,7 @@ router.get("/trend", protect, getTrend);
 router.get("/sales", protect, getSales); 
 router.get("/recent-sales", protect, getRecentSales);
 
-router.get("/:id", protect, getInventory);   // 👈 LAST
+router.get("/get", protect, getInventory);   // 👈 LAST
 
 router.patch("/:id/serials", protect, addSerialNumbers);
 router.put("/:id", protect, updateInventory);

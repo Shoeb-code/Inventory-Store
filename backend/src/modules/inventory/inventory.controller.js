@@ -8,7 +8,7 @@ import * as inventoryService from "./inventory.service.js";
 export const createInventory = async (req, res, next) => {
   try {
     const storeId = req.user?.id;
-
+    
     if (!storeId) {
       return res.status(401).json({
         success: false,
@@ -16,7 +16,7 @@ export const createInventory = async (req, res, next) => {
       });
     }
 
-    
+     
 
     const data = await inventoryService.createInventory({
       ...req.body,
@@ -40,10 +40,12 @@ export const createInventory = async (req, res, next) => {
 export const getInventory = async (req, res, next) => {
   try {
     const storeId = req.user.id;
+    console.log("storeId-->",storeId)
     const data = await inventoryService.getInventory(storeId);
+    console.log("data:->",data)
     
     res.status(200).json({
-      success: true,
+      success:true,
       count: data.length,
       data,
     });
@@ -79,7 +81,6 @@ export const addSerialNumbers = async (req, res, next) => {
     next(err);
   }
 };
-
 
 // ✅ UPDATE INVENTORY
 export const updateInventory = async (req, res, next) => {
@@ -180,20 +181,25 @@ export const getTrend = async (req, res) => {
 export const getRecentSales = async (req, res) => {
   try {
     const sales = await InventoryUnit.find({ status: "SOLD" })
+      .populate("inventoryId", "brand model") // 🔥 KEY FIX
       .sort({ updatedAt: -1 })
       .limit(5);
 
     const formatted = sales.map((s) => ({
-      productName: s.serialNumber || "Product",
+      productName: `${s.inventoryId?.brand || ""} ${s.inventoryId?.model || ""}`.trim() || "Product",
+      brand: s.inventoryId?.brand || "N/A",
+      model: s.inventoryId?.model || "N/A",
       amount: s.sellingPrice,
+      profit: s.profit,
+      soldAt: s.soldAt,
     }));
 
     res.json(formatted);
+
   } catch (err) {
     res.status(500).json({ message: err.message });
   }
-};
-
+}
 
 // Sales record
 export const getSales = async (req, res) => {

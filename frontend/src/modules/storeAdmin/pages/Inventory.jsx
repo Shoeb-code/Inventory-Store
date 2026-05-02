@@ -12,6 +12,7 @@ export default function Inventory() {
   const fetchInventory = async () => {
     try {
       const res = await getInventoryAPI();
+       console.log("Inventory data:->",res.data)
       setProducts(res.data || []);
     } catch (err) {
       console.error(err);

@@ -3,7 +3,7 @@
 import { useNavigate } from "react-router-dom";
 import { IndianRupee, Package, AlertTriangle } from "lucide-react";
 
-export default function ProductCard({ product }) {
+export default function ProductCard({product}) {
   const navigate = useNavigate();
 
   return (
