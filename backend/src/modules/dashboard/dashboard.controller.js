@@ -1,22 +1,13 @@
-import * as dashboardService from "./dashboard.service.js";
+import * as dashboardService
+from "./dashboard.service.js";
 
-// STORE ADMIN
-export const storeDashboard = async (req, res, next) => {
-  try {
-     
-    const data = await dashboardService.getStoreDashboard(req.user);
-    res.json(data);
-  } catch (e) {
-    next(e);
-  }
-};
-
-// SUPER ADMIN
+// SUPER ADMIN DASHBOARD
 export const superDashboard = async (req, res, next) => {
-  try {
-    const data = await dashboardService.getSuperDashboard();
-    res.json(data);
-  } catch (e) {
+try { 
+  const { filter = "day", } = req.query;
+  const data = await dashboardService.getSuperDashboard(filter);
+  res.json({  success: true,data,});
+} catch (e) {
     next(e);
   }
 };
