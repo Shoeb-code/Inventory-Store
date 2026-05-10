@@ -76,7 +76,7 @@ export default function AppRoutes() {
           <Route path="dashboard" element={<StoreDashboard />} />
           <Route path="inventory" element={<Inventory />} />
           <Route path="reports" element={<Reports />} />
-          <Route path="sales" element={<Sales />} />
+          <Route path="sales" element={ < Sales /> } />
           <Route path="add-product" element={<AddProduct />} />
 
           <Route path="inventory-unit/:id" element={<InventoryDetails />} />
