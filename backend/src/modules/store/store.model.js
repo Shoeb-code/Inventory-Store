@@ -56,7 +56,7 @@ const storeSchema = new mongoose.Schema(
     // 👤 SUPER ADMIN
     createdBy: {
       type: mongoose.Schema.Types.ObjectId,
-      ref: "User",
+      ref:"User",
     },
 
     // 📊 ANALYTICS (optional)

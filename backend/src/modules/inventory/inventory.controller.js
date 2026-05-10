@@ -1,6 +1,7 @@
 // modules/inventory/inventory.controller.js
 
 import InventoryUnit from "../inventoryUnit/inventoryUnit.model.js";
+import Inventory from "./inventory.model.js";
 import * as inventoryService from "./inventory.service.js";
 
 
@@ -40,9 +41,9 @@ export const createInventory = async (req, res, next) => {
 export const getInventory = async (req, res, next) => {
   try {
     const storeId = req.user.id;
-    console.log("storeId-->",storeId)
+    console.log("storeId->",storeId)
     const data = await inventoryService.getInventory(storeId);
-    console.log("data:->",data)
+    
     
     res.status(200).json({
       success:true,
@@ -121,19 +122,55 @@ export const deleteInventory = async (req, res, next) => {
 
 export const getSummary = async (req, res) => {
   try {
-    const soldUnits = await InventoryUnit.find({ status: "SOLD" });
-  
-    const revenue = soldUnits.reduce((acc, u) => acc + (u.sellingPrice || 0), 0);
+
+    const storeId = req.user.id;
+    console.log("StoreID --->", storeId);
+    // FIND STORE INVENTORIES
+    const inventories = await Inventory.find({
+      storeId: storeId,
+    });
+
+    // EXTRACT INVENTORY IDS
+    const inventoryIds = inventories.map(inv => inv._id);
+
+    // FIND SOLD UNITS
+    const soldUnits = await InventoryUnit.find({ inventoryId: {$in: inventoryIds,},
+      status: "SOLD",
+    });
+
+    // TOTAL REVENUE
+    const revenue = soldUnits.reduce((acc, u) => acc + (u.sellingPrice || 0),0);
+    // TOTAL PROFIT
     const profit = soldUnits.reduce((acc, u) => acc + (u.profit || 0), 0);
 
+    // TOTAL SALES
     const sales = soldUnits.length;
-    const stock = await InventoryUnit.countDocuments({ status: "AVAILABLE" });
 
-    const topProduct = "Dell G15"; // improve later with aggregation
+    // AVAILABLE STOCK
+    const stock = await InventoryUnit.countDocuments({
+      inventoryId: {
+        $in: inventoryIds,
+      },
+      status: "AVAILABLE",
+    });
 
-    res.json({ revenue, profit, sales, stock, topProduct });
+    // TEMP
+    const topProduct = "Dell G15";
+
+    res.json({
+      revenue,
+      profit,
+      sales,
+      stock,
+      topProduct,
+    });
+
   } catch (err) {
-    res.status(500).json({ message: err.message });
+
+    res.status(500).json({
+      message: err.message,
+    });
+
   }
 };
 
@@ -180,73 +217,163 @@ export const getTrend = async (req, res) => {
 
 export const getRecentSales = async (req, res) => {
   try {
-    const sales = await InventoryUnit.find({ status: "SOLD" })
-      .populate("inventoryId", "brand model") // 🔥 KEY FIX
-      .sort({ updatedAt: -1 })
+
+    const storeId = req.user.id;
+
+    // FIND INVENTORIES OF STORE
+    const inventories = await Inventory.find({
+      storeId: storeId,
+    });
+
+    // EXTRACT INVENTORY IDS
+    const inventoryIds = inventories.map(inv => inv._id);
+
+    // FIND RECENT SOLD UNITS
+    const sales = await InventoryUnit.find({
+
+      inventoryId: {
+        $in: inventoryIds,
+      },
+
+      status: "SOLD",
+
+    })
+
+      .populate("inventoryId", "brand model")
+
+      .sort({
+        soldAt: -1,
+      })
+
       .limit(5);
 
+    // FORMAT RESPONSE
     const formatted = sales.map((s) => ({
-      productName: `${s.inventoryId?.brand || ""} ${s.inventoryId?.model || ""}`.trim() || "Product",
+
+      productName:
+        `${s.inventoryId?.brand || ""} ${s.inventoryId?.model || ""}`.trim()
+        || "Product",
+
       brand: s.inventoryId?.brand || "N/A",
+
       model: s.inventoryId?.model || "N/A",
-      amount: s.sellingPrice,
-      profit: s.profit,
+
+      amount: s.sellingPrice || 0,
+
+      profit: s.profit || 0,
+
       soldAt: s.soldAt,
+
     }));
 
     res.json(formatted);
 
   } catch (err) {
-    res.status(500).json({ message: err.message });
+
+    res.status(500).json({
+      message: err.message,
+    });
+
   }
-}
+};
+
 
 // Sales record
 export const getSales = async (req, res) => {
   try {
-    const sales = await InventoryUnit.find({ status: "SOLD" })
+
+    // LOGGED-IN STORE ID
+    const storeId = req.user.id;
+
+    // FIND STORE INVENTORIES
+    const inventories = await Inventory.find({
+      storeId: storeId,
+    });
+
+    // EXTRACT INVENTORY IDS
+    const inventoryIds = inventories.map(inv => inv._id);
+
+    // FIND SOLD UNITS OF STORE
+    const sales = await InventoryUnit.find({
+
+      inventoryId: {
+        $in: inventoryIds,
+      },
+
+      status: "SOLD",
+
+    })
+
       .populate(
         "inventoryId",
         "brand model category processor ram storage price"
       )
-      .sort({ updatedAt: -1 });
 
+      .sort({
+        soldAt: -1,
+      });
+
+    // FORMAT RESPONSE
     const result = sales.map((s) => ({
+
       id: s._id,
 
-      // 🔹 PRODUCT DETAILS
+      // PRODUCT DETAILS
       product: {
+
         id: s.inventoryId?._id,
+
         brand: s.inventoryId?.brand || "-",
+
         model: s.inventoryId?.model || "-",
+
         category: s.inventoryId?.category || "-",
+
         processor: s.inventoryId?.processor || "-",
+
         ram: s.inventoryId?.ram || "-",
+
         storage: s.inventoryId?.storage || "-",
+
         basePrice: s.inventoryId?.price || 0,
       },
 
-      // 🔹 UNIT DETAILS
+      // UNIT DETAILS
       unit: {
+
         serialNumber: s.serialNumber || "-",
+
         imei: s.imei || "-",
       },
 
-      // 🔹 SALE DETAILS
+      // SALE DETAILS
       sale: {
+
         sellingPrice: s.sellingPrice || 0,
+
         costPrice: s.costPrice || 0,
-        profit: s.profit ?? (s.sellingPrice || 0) - (s.costPrice || 0), // 🔥 safe calc
-        date: s.updatedAt,
-      }
+
+        profit:
+          s.profit ??
+          ((s.sellingPrice || 0) - (s.costPrice || 0)),
+
+        date: s.soldAt || s.updatedAt,
+      },
+
     }));
 
-    console.log("result:", result[0]); // 👈 log only first (clean debug)
+    // CLEAN DEBUG
+    console.log("First Sale:", result[0]);
 
     res.json(result);
 
   } catch (err) {
+
     console.error("SALES ERROR:", err);
-    res.status(500).json({ message: err.message });
+
+    res.status(500).json({
+      message: err.message,
+    });
+
   }
 };

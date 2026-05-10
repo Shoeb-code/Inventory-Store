@@ -11,7 +11,9 @@ import {
   ResponsiveContainer,
   CartesianGrid,
 } from "recharts";
-import { DollarSign, Package, Star, TrendingUp } from "lucide-react";
+import { motion } from "framer-motion";
+import { DollarSign, Sparkles,
+  CalendarDays, Package, Star, TrendingUp } from "lucide-react";
 
 export default function Reports() {
   const [range, setRange] = useState("today");
@@ -89,64 +91,268 @@ export default function Reports() {
   // 🎯 MAIN UI
   ///////////////////////////////////////////////////////
   return (
-    <div className="p-6 space-y-6 text-white">
 
+    <div className="min-h-screen bg-[#020617] text-white p-6">
+  
+      {/* BACKGROUND GLOWS */}
+      <div className="fixed inset-0 overflow-hidden pointer-events-none">
+  
+        <div className="absolute top-20 left-[-120px] h-96 w-96 rounded-full bg-blue-500/10 blur-3xl" />
+  
+        <div className="absolute bottom-0 right-[-100px] h-96 w-96 rounded-full bg-cyan-500/10 blur-3xl" />
+  
+      </div>
+  
       {/* HEADER */}
-      <div className="flex justify-between items-center">
+      <div className="relative z-10 flex flex-col lg:flex-row lg:items-center lg:justify-between gap-5 mb-8">
+  
+        {/* LEFT */}
         <div>
-          <h1 className="text-2xl font-semibold">Reports</h1>
-          <p className="text-sm text-slate-400">
-            Analyze your store performance
-          </p>
-        </div>
-
-        {/* FILTER */}
-        <select
-          value={range}
-          onChange={(e) => setRange(e.target.value)}
-          className="bg-slate-800 border border-white/10 px-3 py-2 rounded-lg text-sm"
-        >
-          <option value="today">Today</option>
-          <option value="week">This Week</option>
-          <option value="month">This Month</option>
-        </select>
-      </div>
-
-      {/* KPI CARDS */}
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-        <StatCard title="Revenue" value={`₹${data.revenue}`} color="green" />
-        <StatCard title="Profit" value={`₹${data.profit}`} color="blue" />
-        <StatCard title="Sales" value={data.sales} color="purple" />
-        <StatCard title="Top Product" value={data.topProduct || "N/A"} color="yellow" />
-      </div>
-
-      {/* CHART */}
-      <div className="bg-white/5 border border-white/10 rounded-xl p-6">
-        <h2 className="text-sm text-slate-400 mb-4">
-          Revenue Trend
-        </h2>
-
-        <div className="h-60">
-          <ResponsiveContainer width="100%" height="100%">
-            <LineChart data={trend}>
-              <CartesianGrid strokeDasharray="3 3" stroke="#444" />
-              <XAxis dataKey="date" stroke="#aaa" />
-              <YAxis stroke="#aaa" />
-              <Tooltip />
-              <Line
-                type="monotone"
-                dataKey="revenue"
-                stroke="#22c55e"
-                strokeWidth={2}
+  
+          <div className="flex items-center gap-3">
+  
+            <div className="flex h-14 w-14 items-center justify-center rounded-3xl border border-blue-500/20 bg-blue-500/10 shadow-lg shadow-blue-500/10">
+  
+              <TrendingUp
+                size={26}
+                className="text-blue-400"
               />
-            </LineChart>
-          </ResponsiveContainer>
+  
+            </div>
+  
+            <div>
+  
+              <div className="flex items-center gap-2">
+  
+                <h1 className="text-4xl font-bold tracking-tight bg-gradient-to-r from-white to-slate-400 bg-clip-text text-transparent">
+  
+                  Reports & Analytics
+  
+                </h1>
+  
+                <Sparkles
+                  size={18}
+                  className="text-blue-400"
+                />
+  
+              </div>
+  
+              <p className="mt-2 text-sm text-slate-400">
+  
+                Monitor store growth, revenue, and business performance.
+  
+              </p>
+  
+            </div>
+  
+          </div>
+  
         </div>
+  
+        {/* FILTER */}
+        <div className="flex items-center gap-3 rounded-2xl border border-white/10 bg-white/[0.03] backdrop-blur-xl px-4 py-3">
+  
+          <CalendarDays
+            size={16}
+            className="text-blue-400"
+          />
+  
+          <select
+  
+            value={range}
+  
+            onChange={(e) =>
+              setRange(e.target.value)
+            }
+  
+            className="bg-transparent text-sm outline-none"
+          >
+  
+            <option
+              value="today"
+              className="bg-slate-900"
+            >
+              Today
+            </option>
+  
+            <option
+              value="week"
+              className="bg-slate-900"
+            >
+              This Week
+            </option>
+  
+            <option
+              value="month"
+              className="bg-slate-900"
+            >
+              This Month
+            </option>
+  
+          </select>
+  
+        </div>
+  
       </div>
-
-      {/* INSIGHTS */}
-      <Insights data={data} />
-
+  
+      {/* KPI GRID */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-5 mb-8">
+  
+        <StatCard
+          title="Revenue"
+          value={`₹${data.revenue.toLocaleString()}`}
+          icon={<DollarSign size={18} />}
+          color="green"
+        />
+  
+        <StatCard
+          title="Profit"
+          value={`₹${data.profit.toLocaleString()}`}
+          icon={<TrendingUp size={18} />}
+          color="blue"
+        />
+  
+        <StatCard
+          title="Sales"
+          value={data.sales}
+          icon={<Package size={18} />}
+          color="purple"
+        />
+  
+        <StatCard
+          title="Top Product"
+          value={data.topProduct || "N/A"}
+          icon={<Star size={18} />}
+          color="yellow"
+        />
+  
+      </div>
+  
+      {/* MAIN GRID */}
+      <div className="grid lg:grid-cols-3 gap-6">
+  
+        {/* CHART */}
+        <motion.div
+  
+          initial={{
+            opacity: 0,
+            y: 10,
+          }}
+  
+          animate={{
+            opacity: 1,
+            y: 0,
+          }}
+  
+          className="lg:col-span-2 overflow-hidden rounded-[32px] border border-white/10 bg-gradient-to-br from-[#0f172a] via-[#111827] to-[#020617] shadow-2xl shadow-black/20"
+        >
+  
+          {/* TOP ACCENT */}
+          <div className="h-[2px] w-full bg-gradient-to-r from-blue-500 via-cyan-400 to-purple-500" />
+  
+          {/* HEADER */}
+          <div className="flex items-center justify-between p-6 border-b border-white/5">
+  
+            <div>
+  
+              <h2 className="text-xl font-semibold">
+  
+                Revenue Trend
+  
+              </h2>
+  
+              <p className="mt-1 text-sm text-slate-400">
+  
+                Revenue performance over time.
+  
+              </p>
+  
+            </div>
+  
+            <div className="rounded-full border border-emerald-500/20 bg-emerald-500/10 px-3 py-1 text-xs text-emerald-400">
+  
+              Live Analytics
+  
+            </div>
+  
+          </div>
+  
+          {/* CHART */}
+          <div className="h-[420px] p-5">
+  
+            <ResponsiveContainer
+              width="100%"
+              height="100%"
+            >
+  
+              <LineChart data={trend}>
+  
+                <CartesianGrid
+                  strokeDasharray="3 3"
+                  stroke="rgba(255,255,255,0.05)"
+                />
+  
+                <XAxis
+                  dataKey="date"
+                  stroke="#64748b"
+                  fontSize={12}
+                />
+  
+                <YAxis
+                  stroke="#64748b"
+                  fontSize={12}
+                />
+  
+                <Tooltip
+                  contentStyle={{
+                    background:
+                      "#0f172a",
+                    border:
+                      "1px solid rgba(255,255,255,0.1)",
+                    borderRadius:
+                      "16px",
+                  }}
+                />
+  
+                <Line
+                  type="monotone"
+                  dataKey="revenue"
+                  stroke="#22c55e"
+                  strokeWidth={3}
+                  dot={false}
+                />
+  
+              </LineChart>
+  
+            </ResponsiveContainer>
+  
+          </div>
+  
+        </motion.div>
+  
+        {/* INSIGHTS */}
+        <motion.div
+  
+          initial={{
+            opacity: 0,
+            y: 10,
+          }}
+  
+          animate={{
+            opacity: 1,
+            y: 0,
+          }}
+  
+        >
+  
+          <Insights
+            data={data}
+          />
+  
+        </motion.div>
+  
+      </div>
+  
     </div>
   );
 }
@@ -154,21 +360,83 @@ export default function Reports() {
 ///////////////////////////////////////////////////////
 // 🔹 STAT CARD
 ///////////////////////////////////////////////////////
-const StatCard = ({ title, value, color }) => {
+const StatCard = ({
+  title,
+  value,
+  icon,
+  color,
+}) => {
+
   const colors = {
-    green: "text-green-400",
-    blue: "text-blue-400",
-    purple: "text-purple-400",
-    yellow: "text-yellow-400",
+
+    green:
+      "from-emerald-500/10 to-green-500/10 border-emerald-500/20 text-emerald-400",
+
+    blue:
+      "from-blue-500/10 to-cyan-500/10 border-blue-500/20 text-blue-400",
+
+    purple:
+      "from-purple-500/10 to-pink-500/10 border-purple-500/20 text-purple-400",
+
+    yellow:
+      "from-yellow-500/10 to-orange-500/10 border-yellow-500/20 text-yellow-400",
   };
 
   return (
-    <div className="p-4 bg-white/5 border border-white/10 rounded-xl hover:scale-[1.03] transition duration-200">
-      <p className="text-xs text-gray-400">{title}</p>
-      <h2 className={`text-lg font-semibold ${colors[color]}`}>
-        {value}
-      </h2>
-    </div>
+
+    <motion.div
+
+      whileHover={{
+        y: -4,
+        scale: 1.01,
+      }}
+
+      transition={{
+        duration: 0.2,
+      }}
+
+      className="group relative overflow-hidden rounded-[28px] border border-white/10 bg-gradient-to-br from-[#0f172a] via-[#111827] to-[#020617] p-5 shadow-xl shadow-black/20"
+    >
+
+      {/* TOP ACCENT */}
+      <div className="absolute top-0 left-0 h-[2px] w-full bg-gradient-to-r from-blue-500 via-cyan-400 to-purple-500" />
+
+      {/* GLOW */}
+      <div className="absolute inset-0 opacity-0 group-hover:opacity-100 transition duration-500 bg-[radial-gradient(circle_at_top_right,rgba(59,130,246,0.15),transparent_35%),radial-gradient(circle_at_bottom_left,rgba(168,85,247,0.12),transparent_35%)]" />
+
+      <div className="relative z-10">
+
+        <div className="flex items-start justify-between">
+
+          <div>
+
+            <p className="text-xs uppercase tracking-[0.2em] text-slate-500">
+
+              {title}
+
+            </p>
+
+            <h2 className="mt-3 text-3xl font-bold tracking-tight">
+
+              {value}
+
+            </h2>
+
+          </div>
+
+          <div
+            className={`flex h-12 w-12 items-center justify-center rounded-2xl border bg-gradient-to-br ${colors[color]}`}
+          >
+
+            {icon}
+
+          </div>
+
+        </div>
+
+      </div>
+
+    </motion.div>
   );
 };
 

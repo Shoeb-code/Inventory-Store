@@ -7,16 +7,15 @@ import {
 export const storeLogin = async (req, res) => {
   try {
     const { storeId,password } = req.body;
-       console.log(req.body);
+       
     if (!storeId || !password) {
       return res.status(400).json({
         success: false,
         message: "Store ID and password required",
       });
     }
-      console.log('hello')
       const store = await loginStore(storeId, password);
-      console.log('hello2')
+      
     // 🔥 PAYLOAD
     const payload = {
       id: store._id,

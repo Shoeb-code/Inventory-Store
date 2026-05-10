@@ -1,61 +1,247 @@
-import Store from "../store/store.model.js";
+import InventoryUnit from "../inventoryUnit/inventoryUnit.model.js";
 import Inventory from "../inventory/inventory.model.js";
-import Transaction from "../transaction/transaction.model.js";
+import Store from "../store/store.model.js";
 
-// 🏪 STORE DASHBOARD
-export const getStoreDashboard = async (user) => {
+export const getSuperDashboard = async (filter) => {
 
-  if (!user.storeId) {
-    throw new Error("User has no store assigned");
+  let groupId = {};
+
+  // FILTERS
+  if (filter === "day") {
+    groupId = {
+      year: { $year: "$soldAt" },
+      month: { $month: "$soldAt" },
+      day: { $dayOfMonth: "$soldAt" },
+    };
   }
 
-  const storeId = user.storeId;
+  else if (filter === "week") {
+    groupId = {
+      year: { $year: "$soldAt" },
+      week: { $week: "$soldAt" },
+    };
+  }
 
-  const totalStock = await Inventory.countDocuments({ storeId });
+  else if (filter === "month") {
+    groupId = {
+      year: { $year: "$soldAt" },
+      month: { $month: "$soldAt" },
+    };
+  }
 
-  const sales = await Transaction.find({
-    storeId,
-    type: "SELL"
-  }) || [];
+  // DEFAULT
+  else {
+    groupId = {
+      year: { $year: "$soldAt" },
+      month: { $month: "$soldAt" },
+      day: { $dayOfMonth: "$soldAt" },
+    };
+  }
 
-  const totalSales = sales.reduce(
-    (acc, s) => acc + (s.price || 0),
-    0
-  );
+  // =========================================
+  // SALES ANALYTICS
+  // =========================================
 
-  const totalProfit = sales.reduce(
-    (acc, s) => acc + ((s.price || 0) - (s.costPrice || 0)),
-    0
-  );
+  const salesAnalytics = await InventoryUnit.aggregate([
+    {
+      $match: {
+        status: "SOLD",
+      },
+    },
+    {
+      $group: {
+        _id: groupId,
+        revenue: {
+          $sum: "$sellingPrice",
+        },
+
+        profit: {
+          $sum: "$profit",
+        },
+
+        unitsSold: {
+          $sum: 1,
+        },
+      },
+    },
+
+    {
+      $sort: {
+        "_id.year": 1,
+      },
+    },
+  ]);
+
+  // =========================================
+  // TOTALS
+  // =========================================
+
+  const totals = await InventoryUnit.aggregate([
+
+    {
+      $match: {
+        status: "SOLD",
+      },
+    },
+
+    {
+      $group: {
+        _id: null,
+
+        totalRevenue: {
+          $sum: "$sellingPrice",
+        },
+
+        totalProfit: {
+          $sum: "$profit",
+        },
+
+        totalUnits: {
+          $sum: 1,
+        },
+      },
+    },
+  ]);
+
+  // =========================================
+  // STORE RANKING
+  // =========================================
+
+  const storeRanking = await InventoryUnit.aggregate([
+
+    // ONLY SOLD ITEMS
+    {
+      $match: {
+        status: "SOLD",
+      },
+    },
+
+    // JOIN INVENTORY
+    {
+      $lookup: {
+        from: "inventories",
+        localField: "inventoryId",
+        foreignField: "_id",
+        as: "inventory",
+      },
+    },
+
+    // ARRAY -> OBJECT
+    {
+      $unwind: "$inventory",
+    },
+
+    // JOIN STORE
+    {
+      $lookup: {
+        from: "stores",
+        localField: "inventory.storeId",
+        foreignField: "_id",
+        as: "store",
+      },
+    },
+
+    // ARRAY -> OBJECT
+    {
+      $unwind: "$store",
+    },
+
+    // GROUP BY STORE
+    {
+      $group: {
+        _id: "$store._id",
+
+        storeName: {
+          $first: "$store.name",
+        },
+
+        revenue: {
+          $sum: "$sellingPrice",
+        },
+
+        profit: {
+          $sum: "$profit",
+        },
+
+        unitsSold: {
+          $sum: 1,
+        },
+      },
+    },
+
+    // SORT BY REVENUE
+    {
+      $sort: {
+        revenue: -1,
+      },
+    },
+  ]);
+
+  // =========================================
+  // SALES HEATMAP
+  // =========================================
+
+  const heatmap = await InventoryUnit.aggregate([
+
+    {
+      $match: {
+        status: "SOLD",
+      },
+    },
+
+    {
+      $group: {
+        _id: {
+
+          // 1 = Sunday
+          // 2 = Monday
+          day: {
+            $dayOfWeek: "$soldAt",
+          },
+
+          // 0-23
+          hour: {
+            $hour: "$soldAt",
+          },
+        },
+
+        sales: {
+          $sum: "$sellingPrice",
+        },
+      },
+    },
+  ]);
+
+  // =========================================
+  // LOW STOCK PRODUCTS
+  // =========================================
+
+  const lowStock = await Inventory.find({
+
+    $expr: {
+      $lte: ["$stock", "$minStock"],
+    },
+
+  });
+
+  // =========================================
+  // RETURN FINAL DASHBOARD DATA
+  // =========================================
 
   return {
-    totalStock,
-    totalSales,
-    totalProfit,
-    recentSales: sales.slice(-5),
-    salesChart: []
-  };
-};
 
-// 👑 SUPER ADMIN DASHBOARD
-export const getSuperDashboard = async () => {
+    salesAnalytics,
 
-  const stores = await Store.find();
-  const totalStores = stores.length;
+    totals: totals[0] || {
+      totalRevenue: 0,
+      totalProfit: 0,
+      totalUnits: 0,
+    },
 
-  const totalStock = await Inventory.countDocuments();
+    storeRanking,
 
-  const sales = await Transaction.find({ type: "SELL" }) || [];
+    heatmap,
 
-  const totalSales = sales.reduce(
-    (acc, s) => acc + (s.price || 0),
-    0
-  );
-
-  return {
-    totalStores,
-    totalStock,
-    totalSales,
-    stores
+    lowStock,
   };
 };

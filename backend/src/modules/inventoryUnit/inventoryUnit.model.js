@@ -27,7 +27,17 @@ const inventoryUnitSchema = new mongoose.Schema(
 );
 
 // 🔥 INDEX
-inventoryUnitSchema.index({ inventoryId: 1 });
+inventoryUnitSchema.index({
+  soldAt: 1,
+});
+
+inventoryUnitSchema.index({
+  status: 1,
+});
+
+inventoryUnitSchema.index({
+  inventoryId: 1,
+});
 
 // 🔥 AUTO PROFIT
 inventoryUnitSchema.pre("save", async function () {

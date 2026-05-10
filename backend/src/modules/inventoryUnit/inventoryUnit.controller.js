@@ -22,7 +22,7 @@ export const getUnitsByInventory = async (req, res, next) => {
 export const updateUnitDetails = async (req,res) => {
   try {
     const { id } = req.params;
-     console.log("id;->",id);
+     
     const unit = await InventoryUnit.findById(id);
 
     if (!unit) {

@@ -14,12 +14,12 @@ export const protect = (req, res, next) => {
   
     
     // 🔒 Verify token
-    const decoded = jwt.verify(token, config.JWT_ACCESS_SECRET);
+    const decoded = jwt.verify(token,config.JWT_ACCESS_SECRET);
 
     // ✅ Attach user
-    req.user = decoded;
-    
-   
+     req.user = decoded;
+
+     console.log("user id-->",req.user.storeId);
     // ✅ Move to next middleware
     return next();
 

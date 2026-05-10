@@ -1,175 +1,462 @@
-// modules/admin/pages/AdminDashboard.jsx
+import { useEffect, useState } from "react";
 
-import { useMemo } from "react";
 import {
-  LineChart, Line, BarChart, Bar,
-  XAxis, YAxis, Tooltip, ResponsiveContainer
+  getSuperDashboardAPI,
+} from "../../store/storeAPI.js";
+
+import {
+  ResponsiveContainer,
+  LineChart,
+  Line,
+  XAxis,
+  YAxis,
+  Tooltip,
+  BarChart,
+  Bar,
 } from "recharts";
 
 export default function AdminDashboard() {
 
-  // 🔹 DATA
-  const salesData = [
-    { date: "Apr 20", store: "A", product: "Dell G15", revenue: 20000, profit: 5000, units: 2 },
-    { date: "Apr 21", store: "B", product: "HP Pavilion", revenue: 15000, profit: 4000, units: 2 },
-    { date: "Apr 22", store: "C", product: "MacBook Air", revenue: 30000, profit: 9000, units: 1 },
-    { date: "Apr 23", store: "D", product: "Lenovo Legion", revenue: 28000, profit: 8000, units: 2 },
-    { date: "Apr 24", store: "E", product: "Dell G15", revenue: 22000, profit: 6000, units: 2 },
-    { date: "Apr 25", store: "F", product: "HP Pavilion", revenue: 18000, profit: 5000, units: 2 },
-  ];
+  const [dashboard, setDashboard] = useState(null);
+  const [filter, setFilter] = useState("day");
+  const [loading, setLoading] = useState(true);
 
-  // 🔹 KPI
-  const totalRevenue = salesData.reduce((a, b) => a + b.revenue, 0);
-  const totalProfit = salesData.reduce((a, b) => a + b.profit, 0);
-  const totalUnits = salesData.reduce((a, b) => a + b.units, 0);
-
-  // 🔹 TOP PRODUCT
-  const topProduct = useMemo(() => {
-    const map = {};
-    salesData.forEach((i) => {
-      map[i.product] = (map[i.product] || 0) + i.units;
-    });
-    return Object.entries(map).sort((a, b) => b[1] - a[1])[0];
-  }, []);
-
-  // 🔹 STORE STATS
-  const storeStats = useMemo(() => {
-    const map = {};
-    salesData.forEach((i) => {
-      if (!map[i.store]) {
-        map[i.store] = { revenue: 0, units: 0 };
+  // LOAD DASHBOARD
+  const loadDashboard = async () => {
+    try { setLoading(true);
+        const res = await getSuperDashboardAPI(filter );
+         setDashboard(res.data);
+         console.log("User Data ->",res.data)
+       } catch (error){  console.log(error) ; }
+        finally {
+                  setLoading(false);
       }
-      map[i.store].revenue += i.revenue;
-      map[i.store].units += i.units;
-    });
-    return Object.entries(map).map(([store, data]) => ({
-      store,
-      ...data,
+    };
+
+  useEffect(() => {
+      loadDashboard();
+  }, [filter]);
+
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-[#0f172a] flex items-center justify-center text-sm text-white">
+        Loading dashboard...
+      </div>
+    );
+  }
+
+  const totals = dashboard?.totals || {};
+  const salesAnalytics = dashboard?.salesAnalytics || [];
+  const storeRanking = dashboard?.storeRanking || [];
+  const topProducts = dashboard?.topProducts || [];
+  const recentSales = dashboard?.recentSales || [];
+
+  // CHART DATA
+  const chartData =
+    salesAnalytics.map((i) => ({
+      name:i._id.day || i._id.week || i._id.month, revenue: i.revenue, profit: i.profit,
     }));
-  }, []);
 
-  // 🔹 CHART DATA
-  const chartData = salesData.map((i) => ({
-    name: i.date,
-    revenue: i.revenue,
-    profit: i.profit,
-  }));
+  // STORE STATS
+  const storeStats =
+    storeRanking.map((s) => ({
+      store: s.storeName, 
+      revenue: s.revenue,
+      units: s.unitsSold,
+      profit: s.profit,
+    }));
 
-  const barData = useMemo(() => {
-    const map = {};
-    salesData.forEach((i) => {
-      map[i.product] = (map[i.product] || 0) + i.units;
-    });
-    return Object.entries(map).map(([name, units]) => ({ name, units }));
-  }, []);
+  const bestStore =
+    storeStats[0];
 
-  // 🔹 EXTRA METRICS
-  const avgOrder = (totalRevenue / totalUnits).toFixed(0);
-  const bestStore = storeStats.sort((a, b) => b.revenue - a.revenue)[0];
+  const avgOrder = totals.totalUnits > 0  ?
+   ( totals.totalRevenue / totals.totalUnits ).toFixed(0) : 0;
 
   return (
-    <div className="p-6 space-y-6 text-white">
+    <div className="min-h-screen bg-[#0f172a] text-white p-3 sm:p-5 space-y-5">
 
       {/* HEADER */}
-      <div>
-        <h1 className="text-2xl font-semibold">Dashboard</h1>
-        <p className="text-sm text-gray-400">
-          Overview of your stores performance
-        </p>
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+
+        <div>
+
+          <h1 className="text-xl sm:text-2xl font-semibold tracking-tight">
+            Super Admin Dashboard
+          </h1>
+
+          <p className="text-slate-400 text-xs sm:text-sm mt-1">
+            Real-time analytics across all stores
+          </p>
+
+        </div>
+
+        <select
+          value={filter}
+          onChange={(e) =>
+            setFilter(e.target.value)
+          }
+          className="bg-slate-900 border border-white/10 px-3 py-2 rounded-xl outline-none text-sm"
+        >
+          <option value="day">
+            Daily
+          </option>
+
+          <option value="week">
+            Weekly
+          </option>
+
+          <option value="month">
+            Monthly
+          </option>
+        </select>
+
       </div>
 
-      {/* KPI CARDS */}
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+      {/* KPI */}
+      <div className="grid grid-cols-2 xl:grid-cols-4 gap-3">
 
-        <Card title="Revenue" value={`₹${totalRevenue}`} sub="Total earnings" />
-        <Card title="Profit" value={`₹${totalProfit}`} sub="Net profit" />
-        <Card title="Units Sold" value={totalUnits} sub="Total products sold" />
-        <Card title="Top Product" value={topProduct?.[0]} sub="Best seller" />
+        <PremiumCard
+          title="Revenue"
+          value={`₹${totals.totalRevenue || 0}`}
+          icon="💰"
+          gradient="from-emerald-500/20 to-emerald-900/20"
+        />
+
+        <PremiumCard
+          title="Profit"
+          value={`₹${totals.totalProfit || 0}`}
+          icon="📈"
+          gradient="from-blue-500/20 to-blue-900/20"
+        />
+
+        <PremiumCard
+          title="Units Sold"
+          value={totals.totalUnits || 0}
+          icon="📦"
+          gradient="from-purple-500/20 to-purple-900/20"
+        />
+
+        <PremiumCard
+          title="Best Store"
+          value={bestStore?.store || "-"}
+          icon="🏪"
+          gradient="from-orange-500/20 to-orange-900/20"
+        />
 
       </div>
 
-      {/* EXTRA STATS */}
-      <div className="grid grid-cols-2 md:grid-cols-2 gap-4">
+      {/* EXTRA INFO */}
+      <div className="grid grid-cols-2 lg:grid-cols-3 gap-3">
 
-        <Card title="Avg Order Value" value={`₹${avgOrder}`} sub="Revenue / units" />
-        <Card title="Best Store" value={`Store ${bestStore?.store}`} sub="Highest revenue" />
+        <GlassCard>
+
+          <p className="text-slate-400 text-xs">
+            Avg Order Value
+          </p>
+
+          <h2 className="text-lg sm:text-xl font-semibold mt-1">
+            ₹{avgOrder}
+          </h2>
+
+        </GlassCard>
+
+        <GlassCard>
+
+          <p className="text-slate-400 text-xs">
+            Active Stores
+          </p>
+
+          <h2 className="text-lg sm:text-xl font-semibold mt-1">
+            {storeStats.length}
+          </h2>
+
+        </GlassCard>
+
+        <GlassCard className="col-span-2 lg:col-span-1">
+
+          <p className="text-slate-400 text-xs">
+            Top Revenue Store
+          </p>
+
+          <h2 className="text-lg sm:text-xl font-semibold mt-1 truncate">
+            {bestStore?.store || "-"}
+          </h2>
+
+        </GlassCard>
 
       </div>
 
-      {/* CHART */}
-      <div className="bg-white/5 p-5 rounded-xl">
-        <h2 className="mb-4 text-sm text-gray-400">
-          Revenue vs Profit
-        </h2>
+      {/* CHARTS */}
+      <div className="grid lg:grid-cols-3 gap-4">
 
-        <ResponsiveContainer width="100%" height={250}>
-          <LineChart data={chartData}>
-            <XAxis dataKey="name" stroke="#aaa" />
-            <YAxis stroke="#aaa" />
-            <Tooltip />
-            <Line dataKey="revenue" stroke="#3b82f6" strokeWidth={2} />
-            <Line dataKey="profit" stroke="#22c55e" strokeWidth={2} />
-          </LineChart>
-        </ResponsiveContainer>
-      </div>
+        {/* MAIN CHART */}
+        <div className="lg:col-span-2 bg-slate-900/70 border border-white/10 rounded-2xl p-4">
 
-      {/* BAR CHART */}
-      <div className="bg-white/5 p-5 rounded-xl">
-        <h2 className="mb-4 text-sm text-gray-400">
-          Product Performance
-        </h2>
+          <div className="mb-4">
 
-        <ResponsiveContainer width="100%" height={200}>
-          <BarChart data={barData}>
-            <XAxis dataKey="name" stroke="#aaa" />
-            <YAxis stroke="#aaa" />
-            <Tooltip />
-            <Bar dataKey="units" fill="#3b82f6" radius={[6,6,0,0]} />
-          </BarChart>
-        </ResponsiveContainer>
+            <h2 className="text-sm sm:text-base font-semibold">
+              Revenue Analytics
+            </h2>
+
+            <p className="text-xs text-slate-400">
+              Revenue vs Profit
+            </p>
+
+          </div>
+
+          <ResponsiveContainer
+            width="100%"
+            height={260}
+          >
+
+            <LineChart data={chartData}>
+
+              <XAxis
+                dataKey="name"
+                stroke="#777"
+                fontSize={10}
+              />
+
+              <YAxis
+                stroke="#777"
+                fontSize={10}
+              />
+
+              <Tooltip />
+
+              <Line
+                type="monotone"
+                dataKey="revenue"
+                stroke="#22c55e"
+                strokeWidth={2}
+              />
+
+              <Line
+                type="monotone"
+                dataKey="profit"
+                stroke="#3b82f6"
+                strokeWidth={2}
+              />
+
+            </LineChart>
+
+          </ResponsiveContainer>
+
+        </div>
+
+        {/* TOP PRODUCTS */}
+        <div className="bg-slate-900/70 border border-white/10 rounded-2xl p-4">
+
+          <h2 className="text-sm sm:text-base font-semibold mb-4">
+            Top Products
+          </h2>
+
+          <div className="space-y-3">
+
+            {topProducts.map(
+              (p, index) => (
+
+                <div
+                  key={index}
+                  className="flex items-center justify-between bg-slate-800/50 p-3 rounded-xl"
+                >
+
+                  <div className="min-w-0">
+
+                    <p className="font-medium text-sm truncate">
+                      {p._id}
+                    </p>
+
+                    <p className="text-[11px] text-slate-400">
+                      {p.unitsSold} sold
+                    </p>
+
+                  </div>
+
+                  <p className="font-medium text-sm text-emerald-400">
+                    ₹{p.revenue}
+                  </p>
+
+                </div>
+
+              )
+            )}
+
+          </div>
+
+        </div>
+
       </div>
 
       {/* STORE PERFORMANCE */}
-      <div className="bg-white/5 p-5 rounded-xl">
-        <h2 className="mb-4 text-sm text-gray-400">
-          Store Performance
-        </h2>
+      <div className="bg-slate-900/70 border border-white/10 rounded-2xl p-4">
+
+        <div className="mb-4">
+
+          <h2 className="text-sm sm:text-base font-semibold">
+            Store Performance
+          </h2>
+
+          <p className="text-xs text-slate-400">
+            Ranking based on revenue
+          </p>
+
+        </div>
 
         <div className="space-y-3">
-          {storeStats.map((s) => (
+
+          {storeStats.map((s, index) => (
+
             <div
-              key={s.store}
-              className="flex justify-between items-center bg-slate-800 p-3 rounded-lg"
+              key={index}
+              className="flex items-center justify-between bg-slate-800/50 rounded-xl p-3"
             >
-              <div>
-                <p className="text-sm">Store {s.store}</p>
-                <p className="text-xs text-gray-400">
-                  {s.units} units sold
-                </p>
+
+              <div className="flex items-center gap-3 min-w-0">
+
+                <div className="w-9 h-9 rounded-full bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center font-semibold text-sm shrink-0">
+                  {index + 1}
+                </div>
+
+                <div className="min-w-0">
+
+                  <p className="font-medium text-sm truncate">
+                    Store {s.store}
+                  </p>
+
+                  <p className="text-[11px] text-slate-400">
+                    {s.units} units sold
+                  </p>
+
+                </div>
+
               </div>
 
-              <p className="text-sm font-medium">
-                ₹{s.revenue}
-              </p>
+              <div className="text-right">
+
+                <p className="font-medium text-sm text-emerald-400">
+                  ₹{s.revenue}
+                </p>
+
+                <p className="text-[11px] text-slate-400">
+                  Profit ₹{s.profit}
+                </p>
+
+              </div>
+
             </div>
+
           ))}
+
         </div>
+
       </div>
 
-      {/* INSIGHTS (FIXED UI 🔥) */}
-      <div className="bg-gradient-to-br from-slate-900 to-slate-800 p-5 rounded-xl border border-white/10">
+      {/* RECENT SALES */}
+      <div className="bg-slate-900/70 border border-white/10 rounded-2xl p-4">
 
-        <h2 className="text-sm text-gray-400 mb-3">Insights</h2>
+        <div className="mb-4">
 
-        <div className="grid gap-3 text-sm">
+          <h2 className="text-sm sm:text-base font-semibold">
+            Recent Sales
+          </h2>
 
-          <Insight icon="🔥" text={`${topProduct?.[0]} is top selling product`} />
-          <Insight icon="💰" text={`Revenue reached ₹${totalRevenue}`} />
-          <Insight icon="📦" text={`${totalUnits} units sold across stores`} />
-          <Insight icon="🏪" text={`Best store: ${bestStore?.store}`} />
-          <Insight icon="📊" text={`Avg order value: ₹${avgOrder}`} />
+          <p className="text-xs text-slate-400">
+            Latest sold products
+          </p>
 
         </div>
+
+        <div className="space-y-3">
+
+          {recentSales.map((sale) => (
+
+            <div
+              key={sale._id}
+              className="flex items-center justify-between bg-slate-800/50 rounded-xl p-3 gap-3"
+            >
+
+              <div className="min-w-0">
+
+                <p className="font-medium text-sm truncate">
+                  {
+                    sale.inventoryId
+                      ?.productName
+                  }
+                </p>
+
+                <p className="text-[11px] text-slate-400 truncate">
+                  IMEI: {sale.imei}
+                </p>
+
+              </div>
+
+              <div className="text-right shrink-0">
+
+                <p className="font-medium text-sm text-emerald-400">
+                  ₹{sale.sellingPrice}
+                </p>
+
+                <p className="text-[11px] text-slate-400">
+                  {new Date(
+                    sale.soldAt
+                  ).toLocaleDateString()}
+                </p>
+
+              </div>
+
+            </div>
+
+          ))}
+
+        </div>
+
+      </div>
+
+      {/* PRODUCT BAR CHART */}
+      <div className="bg-slate-900/70 border border-white/10 rounded-2xl p-4">
+
+        <div className="mb-4">
+
+          <h2 className="text-sm sm:text-base font-semibold">
+            Product Performance
+          </h2>
+
+          <p className="text-xs text-slate-400">
+            Units sold by products
+          </p>
+
+        </div>
+
+        <ResponsiveContainer
+          width="100%"
+          height={260}
+        >
+
+          <BarChart data={topProducts}>
+
+            <XAxis
+              dataKey="_id"
+              stroke="#777"
+              fontSize={10}
+            />
+
+            <YAxis
+              stroke="#777"
+              fontSize={10}
+            />
+
+            <Tooltip />
+
+            <Bar
+              dataKey="unitsSold"
+              fill="#3b82f6"
+              radius={[6, 6, 0, 0]}
+            />
+
+          </BarChart>
+
+        </ResponsiveContainer>
 
       </div>
 
@@ -177,19 +464,45 @@ export default function AdminDashboard() {
   );
 }
 
-// 🔹 CARD COMPONENT
-const Card = ({ title, value, sub }) => (
-  <div className="p-4 rounded-xl bg-white/5 border border-white/10">
-    <p className="text-xs text-gray-400">{title}</p>
-    <h2 className="text-lg font-semibold">{value}</h2>
-    <p className="text-xs text-gray-500">{sub}</p>
+// PREMIUM CARD
+const PremiumCard = ({
+  title,
+  value,
+  icon,
+  gradient,
+}) => (
+  <div
+    className={`relative overflow-hidden rounded-2xl border border-white/10 bg-gradient-to-br ${gradient} backdrop-blur-xl p-4`}
+  >
+
+    <div className="flex items-start justify-between gap-2">
+
+      <div className="min-w-0">
+
+        <p className="text-[11px] sm:text-xs text-slate-400">
+          {title}
+        </p>
+
+        <h2 className="text-lg sm:text-2xl font-semibold mt-1 truncate">
+          {value}
+        </h2>
+
+      </div>
+
+      <div className="text-2xl sm:text-3xl shrink-0">
+        {icon}
+      </div>
+
+    </div>
+
   </div>
 );
 
-// 🔹 INSIGHT COMPONENT
-const Insight = ({ icon, text }) => (
-  <div className="flex items-center gap-2 bg-slate-800/50 px-3 py-2 rounded">
-    <span>{icon}</span>
-    <span>{text}</span>
+// GLASS CARD
+const GlassCard = ({
+  children,
+}) => (
+  <div className="rounded-2xl border border-white/10 bg-slate-900/70 backdrop-blur-xl p-4">
+    {children}
   </div>
 );
